@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BIZLET - Think Big. Start Small. Scale Fast.</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select: none;
+    }
+
+    /* Spider Web Canvas Background */
+    #spiderWebCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      opacity: 0;
+      animation: fadeInWeb 1.0s ease-out forwards;
+      animation-delay: 0.6s;
+      background: radial-gradient(1200px 600px at 10% 20%, rgba(255,215,0,0.02), transparent 10%),
+                  radial-gradient(900px 400px at 90% 80%, rgba(255,215,0,0.01), transparent 8%);
+      mix-blend-mode: screen;
+    }
+    @keyframes fadeInWeb { from { opacity: 0 } to { opacity: 1 } }
+
+    .glow-effect {
+      position:absolute;
+      width:300px;
+      height:300px;
+      background: radial-gradient(circle, rgba(255,215,0,0.12) 0%, transparent 70%);
+      border-radius:50%;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      z-index:5;
+      pointer-events:none;
+      opacity:0;
+      animation: glowPulse 2s ease-in-out forwards;
+      animation-delay:1.2s;
+    }
+    @keyframes glowPulse {
+      0% { opacity:0; transform:translate(-50%,-50%) scale(0.6); }
+      50% { opacity:0.85; transform:translate(-50%,-50%) scale(1); }
+      100% { opacity:0.45; transform:translate(-50%,-50%) scale(1.2); }
+    }
+
+    /* Taglines centered (originate from center) */
+    .tagline-section {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events: none;
+    }
+
+    .taglines {
+      position: relative;
+      width: 100%;
+      height: 0;
+    }
+
+    .tagline {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(0.75);
+      font-weight: 700;
+      font-size: clamp(1.2rem, 3.2vw, 2.6rem);
+      line-height: 1;
+      color: #ffffff;
+      letter-spacing: 1px;
+      opacity: 0;
+      white-space: nowrap;
+      pointer-events: none;
+      text-align: center;
+      text-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      animation: emergeCenter 2.6s ease-in-out forwards;
+    }
+    .tagline[data-order="0"] { animation-delay: 0s; }
+    .tagline[data-order="1"] { animation-delay: 2.8s; }
+    .tagline[data-order="2"] { animation-delay: 5.6s; }
+
+    @keyframes emergeCenter {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.55); filter: blur(2px); }
+      20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.02); filter: blur(0); }
+      70%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); filter: blur(1px); }
+    }
+
+    /* Center content: BIZLET + login stacked in the exact center */
+    .center-content {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      pointer-events: auto;
+    }
+
+    .brand-logo {
+      font-size: clamp(1.6rem, 4.5vw, 3.6rem);
+      font-weight: 800;
+      color: #FFD700;
+      letter-spacing: 1.8px;
+      opacity: 0;
+      transform-origin: center center;
+      animation: brandIn 0.9s ease forwards;
+      animation-delay: 8.4s;
+      pointer-events: none;
+      text-shadow: 0 12px 40px rgba(255,215,0,0.03);
+    }
+    @keyframes brandIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-card {
+      background: rgba(18,18,18,0.96);
+      border-radius: 12px;
+      padding: 22px 26px;
+      border: 1px solid rgba(255,215,0,0.08);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      text-align:center;
+      backdrop-filter: blur(6px);
+      min-width: 300px;
+      max-width: 420px;
+      transform-origin: center;
+      opacity: 0;
+      animation: loginIn 0.9s ease forwards;
+      animation-delay: 9.2s;
+    }
+    @keyframes loginIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-card h2 { color:#FFD700; margin-bottom:6px; font-size:1.12rem; }
+    .login-card p { color:#ddd; margin-bottom:12px; font-size:0.95rem; }
+
+    .google-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:10px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,215,0,0.02));
+      border: 1px solid rgba(255,255,255,0.06);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    .google-btn:hover { transform: translateY(-3px); box-shadow: 0 18px 46px rgba(255,215,0,0.03); border-color: rgba(255,215,0,0.16); }
+
+    @media (prefers-reduced-motion: reduce) {
+      #spiderWebCanvas, .glow-effect, .tagline, .brand-logo, .login-card { animation: none !important; transition: none !important; }
+      .tagline { opacity: 1; transform: translate(-50%, -50%) scale(1) !important; }
+    }
+
+    @media (max-width: 600px) {
+      .center-content { gap: 12px; }
+      .login-card { padding: 18px 16px; min-width: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <canvas id="spiderWebCanvas" aria-hidden="true"></canvas>
+    <div class="glow-effect" aria-hidden="true"></div>
+
+    <!-- Taglines originate from the exact center -->
+    <div class="tagline-section" aria-hidden="true">
+      <div class="taglines">
+        <div class="tagline" data-order="0">Think Big.</div>
+        <div class="tagline" data-order="1">Start Small.</div>
+        <div class="tagline" data-order="2">Scale Fast.</div>
+      </div>
+    </div>
+
+    <!-- Centered Brand + Login stacked together at the exact center -->
+    <div class="center-content" role="main" aria-labelledby="brandLabel">
+      <div id="brandLabel" class="brand-logo">BIZLET</div>
+
+      <div class="login-card" id="loginSection" role="region" aria-label="Sign in">
+        <h2>Welcome to BIZLET</h2>
+        <p>Sign in with your Google account to get started</p>
+
+        <button class="google-btn" id="googleBtn" type="button" aria-label="Sign in with Google">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Sign in with Google
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Spider web with cursor-reactive movement + parallax
+    (function () {
+      const canvas = document.getElementById('spiderWebCanvas');
+      const ctx = canvas.getContext('2d');
+      let w = innerWidth, h = innerHeight;
+      let nodes = [];
+      const NODE_COUNT = 85;
+      const LINK_DIST = 140;
+      const MOUSE_INFLUENCE = 140;
+
+      // mouse & global offset for parallax
+      const mouse = { x: w / 2, y: h / 2, active: false };
+      const globalOffset = { x: 0, y: 0 };
+
+      function setSize() {
+        w = canvas.width = innerWidth;
+        h = canvas.height = innerHeight;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+      }
+      setSize();
+      window.addEventListener('resize', () => {
+        setSize();
+        initNodes();
+      });
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function initNodes() {
+        nodes = [];
+        for (let i = 0; i < NODE_COUNT; i++) {
+          nodes.push({
+            x: rand(0, w),
+            y: rand(0, h),
+            vx: rand(-0.25, 0.25),
+            vy: rand(-0.25, 0.25),
+            r: rand(0.8, 2.6),
+            baseR: rand(0.8, 2.6),
+            flick: Math.random() * Math.PI * 2
+          });
+        }
+      }
+      initNodes();
+
+      // pointer events
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        mouse.active = true;
+      });
+      window.addEventListener('mouseleave', () => mouse.active = false);
+      window.addEventListener('touchstart', (e) => {
+        mouse.active = true;
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }, {passive:true});
+      window.addEventListener('touchmove', (e) => {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }, {passive:true});
+      window.addEventListener('touchend', () => mouse.active = false);
+
+      // smooth global offset that follows mouse for parallax
+      function updateGlobalOffset() {
+        const targetX = (mouse.x - w/2) * 0.02;
+        const targetY = (mouse.y - h/2) * 0.02;
+        globalOffset.x += (targetX - globalOffset.x) * 0.08;
+        globalOffset.y += (targetY - globalOffset.y) * 0.08;
+      }
+
+      function step() {
+        updateGlobalOffset();
+
+        ctx.clearRect(0,0,w,h);
+
+        // subtle background glow
+        ctx.fillStyle = 'rgba(10,10,10,0.12)';
+        ctx.fillRect(0,0,w,h);
+
+        // move nodes & apply mouse influence
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+
+          // basic motion
+          n.x += n.vx + globalOffset.x * 0.002;
+          n.y += n.vy + globalOffset.y * 0.002;
+
+          // repel from cursor when close
+          if (mouse.active) {
+            const dx = n.x - mouse.x;
+            const dy = n.y - mouse.y;
+            const d = Math.hypot(dx, dy);
+            if (d < MOUSE_INFLUENCE && d > 0.1) {
+              const force = (1 - d / MOUSE_INFLUENCE) * 0.95;
+              // push away
+              n.vx += (dx / d) * force * 0.6;
+              n.vy += (dy / d) * force * 0.6;
+              // expand size near cursor
+              n.r = Math.min(n.baseR + 2.2 * (1 - d / MOUSE_INFLUENCE), n.baseR + 2.6);
+            } else {
+              // relax radius back to base
+              n.r += (n.baseR - n.r) * 0.06;
+            }
+          } else {
+            n.r += (n.baseR - n.r) * 0.06;
+          }
+
+          // simple bounds
+          if (n.x < 0) { n.x = 0; n.vx *= -1; }
+          if (n.x > w) { n.x = w; n.vx *= -1; }
+          if (n.y < 0) { n.y = 0; n.vy *= -1; }
+          if (n.y > h) { n.y = h; n.vy *= -1; }
+        }
+
+        // draw lines (with parallax offset applied)
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            const dx = (a.x - b.x);
+            const dy = (a.y - b.y);
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < LINK_DIST) {
+              // line alpha scaled by distance, and boosted if cursor near
+              let alpha = 1 - dist / LINK_DIST;
+              if (mouse.active) {
+                const ma = Math.hypot(a.x - mouse.x, a.y - mouse.y);
+                const mb = Math.hypot(b.x - mouse.x, b.y - mouse.y);
+                const near = Math.min(ma, mb);
+                if (near < MOUSE_INFLUENCE) alpha *= 1.6;
+              }
+              alpha = Math.min(alpha, 1.0);
+
+              // draw softened glow line
+              ctx.strokeStyle = `rgba(255,215,0,${0.06 * alpha})`;
+              ctx.lineWidth = 1 * (0.6 + 0.8 * alpha);
+
+              ctx.beginPath();
+              ctx.moveTo(a.x + globalOffset.x, a.y + globalOffset.y);
+              ctx.lineTo(b.x + globalOffset.x, b.y + globalOffset.y);
+              ctx.stroke();
+
+              // faint thicker stroke for glow when stronger
+              if (alpha > 0.35) {
+                ctx.strokeStyle = `rgba(255,200,60,${0.01 * alpha})`;
+                ctx.lineWidth = 6 * alpha * 0.06;
+                ctx.beginPath();
+                ctx.moveTo(a.x + globalOffset.x, a.y + globalOffset.y);
+                ctx.lineTo(b.x + globalOffset.x, b.y + globalOffset.y);
+                ctx.stroke();
+              }
+            }
+          }
+        }
+
+        // draw nodes (on top)
+        const now = performance.now();
+        for (let i = 0; i < nodes.length; i++) {
+          const n = nodes[i];
+          const pulse = 0.6 + Math.sin(now * 0.002 + n.flick) * 0.35;
+          const radius = Math.max(0.6, n.r * pulse);
+
+          // halo
+          const g = ctx.createRadialGradient(n.x + globalOffset.x, n.y + globalOffset.y, 0, n.x + globalOffset.x, n.y + globalOffset.y, radius * 6);
+          g.addColorStop(0, `rgba(255,215,0,${0.08 * pulse})`);
+          g.addColorStop(0.4, `rgba(255,180,60,${0.02 * pulse})`);
+          g.addColorStop(1, `rgba(255,180,60,0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(n.x + globalOffset.x, n.y + globalOffset.y, radius * 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // core
+          ctx.fillStyle = `rgba(255,215,0,${0.9 * pulse})`;
+          ctx.beginPath();
+          ctx.arc(n.x + globalOffset.x, n.y + globalOffset.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(step);
+      }
+
+      // start
+      requestAnimationFrame(step);
+    })();
+
+    // placeholder google button behavior
+    document.getElementById('googleBtn').addEventListener('click', () => {
+      alert('Google sign-in will work once backend is connected.');
+    });
+  </script>
+</body>
+</html>
+

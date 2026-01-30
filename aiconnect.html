@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BIZLET – AI Business Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #000;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    background: rgba(18,18,18,0.96);
+    border: 1px solid rgba(255,215,0,0.15);
+    border-radius: 14px;
+    padding: 26px;
+    width: 92%;
+    max-width: 460px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.7);
+  }
+
+  h1 {
+    color: #FFD700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  p {
+    text-align: center;
+    color: #ccc;
+    font-size: 0.9rem;
+    margin-bottom: 18px;
+  }
+
+  label {
+    font-size: 0.8rem;
+    color: #bbb;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: #0c0c0c;
+    color: #fff;
+    outline: none;
+  }
+
+  textarea {
+    resize: none;
+    height: 70px;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #FFD700, #ffcc00);
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    color: #000;
+    margin-top: 6px;
+  }
+
+  button:hover { opacity: 0.9; }
+
+  pre {
+    margin-top: 16px;
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    color: #eee;
+    background: #0a0a0a;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    max-height: 280px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>BIZLET AI</h1>
+  <p>AI-powered business ideas based on your profile</p>
+
+  <label>Budget (₹)</label>
+  <input id="budget" type="number" placeholder="Eg: 50000">
+
+  <label>Experience</label>
+  <select id="experience">
+    <option>Beginner</option>
+    <option>Intermediate</option>
+    <option>Expert</option>
+  </select>
+
+  <label>Business Category</label>
+  <select id="category">
+    <option>Technology</option>
+    <option>Finance</option>
+    <option>Healthcare</option>
+    <option>Education</option>
+    <option>Food</option>
+    <option>E-Commerce</option>
+    <option>Service</option>
+  </select>
+
+  <label>Goal</label>
+  <textarea id="goal" placeholder="Passive income, startup, long-term brand..."></textarea>
+
+  <button onclick="getIdeas()">Find Business Ideas</button>
+
+  <pre id="output">AI results will appear here…</pre>
+</div>
+
+<script>
+/* ⚠️ TEMPORARY – DELETE THIS KEY LATER */
+const GEMINI_API_KEY = "AIzaSyDXcWGI6n1U9xN2O8taioFKJTbIHmKEIHM";
+
+async function getIdeas() {
+  const budget = document.getElementById("budget").value;
+  const experience = document.getElementById("experience").value;
+  const category = document.getElementById("category").value;
+  const goal = document.getElementById("goal").value;
+
+  if (!budget || !goal) {
+    alert("Please enter budget and goal");
+    return;
+  }
+
+  const prompt = `
+You are a professional startup consultant in India.
+
+User details:
+- Budget: ₹${budget}
+- Experience: ${experience}
+- Category: ${category}
+- Goal: ${goal}
+
+Suggest 5 realistic business ideas.
+
+For each idea provide:
+1. Business name
+2. What it does (1 line)
+3. Why it suits this user
+4. Expected monthly profit (INR)
+5. Difficulty level (Easy / Medium / Hard)
+
+Keep it practical and beginner-friendly.
+`;
+
+  document.getElementById("output").innerText = "Thinking...";
+
+  try {
+    const res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
+
+    const data = await res.json();
+    const text = data.candidates[0].content.parts[0].text;
+
+    document.getElementById("output").innerText = text;
+  } catch (err) {
+    document.getElementById("output").innerText =
+      "❌ Error connecting to Gemini AI";
+  }
+}
+</script>
+
+</body>
+</html>

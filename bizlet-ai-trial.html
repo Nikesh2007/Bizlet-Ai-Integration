@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Ideas Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #f5f5f5;
+            --color-bg-secondary: #ffffff;
+            --color-text-primary: #1a1a1a;
+            --color-text-secondary: #666666;
+            --color-primary: #2196F3;
+            --color-primary-hover: #1976D2;
+            --color-success: #4CAF50;
+            --color-error: #f44336;
+            --color-border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .form-section {
+            background: var(--color-bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .form-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: var(--color-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background-color: var(--color-bg-secondary);
+            color: var(--color-text-primary);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: var(--color-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .results-section {
+            background: var(--color-bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: var(--color-primary);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 40px 20px;
+            color: var(--color-text-secondary);
+            font-size: 1.1em;
+        }
+
+        .spinner {
+            border: 4px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .ideas-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .idea-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--color-primary);
+            transition: all 0.3s ease;
+        }
+
+        .idea-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+
+        .idea-number {
+            display: inline-block;
+            background-color: var(--color-primary);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+
+        .idea-content {
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: var(--color-error);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--color-error);
+        }
+
+        .success-message {
+            background-color: #e8f5e9;
+            color: var(--color-success);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--color-success);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .form-section,
+            .results-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Business Ideas Generator</h1>
+            <p>Enter your details and let AI generate 10 personalized business ideas for you</p>
+        </header>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>Your Details</h2>
+                <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.85em; color: #856404;">
+                    <strong>⚠️ API Note:</strong> Free Gemini API has strict rate limits. If you get a 429 error, wait 1-2 minutes before trying again, or use a different API key.
+                </div>
+                <form id="businessForm">
+                    <div class="form-group">
+                        <label for="budget">💰 Budget (in ₹)</label>
+                        <input type="number" id="budget" placeholder="e.g., 500000" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">📁 Category/Industry</label>
+                        <select id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="Technology">Technology</option>
+                            <option value="E-commerce">E-commerce</option>
+                            <option value="Services">Services</option>
+                            <option value="Food & Beverage">Food & Beverage</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Real Estate">Real Estate</option>
+                            <option value="Agriculture">Agriculture</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experience">🎓 Experience Level</label>
+                        <select id="experience" required>
+                            <option value="">Select experience level</option>
+                            <option value="Beginner">Beginner (No business experience)</option>
+                            <option value="Intermediate">Intermediate (1-5 years)</option>
+                            <option value="Advanced">Advanced (5+ years)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="goals">🎯 Your Goals/Interests</label>
+                        <textarea id="goals" placeholder="e.g., Sustainable products, tech-driven, passive income, etc." required></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Generate Ideas</button>
+                        <button type="reset" class="btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-section">
+                <h2>Business Ideas</h2>
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💡</div>
+                        <p>Fill in the form and click "Generate Ideas" to see your personalized business ideas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyDXcWGI6n1U9xN2O8taioFKJTbIHmKEIHM';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+        const form = document.getElementById('businessForm');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const budget = document.getElementById('budget').value;
+            const category = document.getElementById('category').value;
+            const experience = document.getElementById('experience').value;
+            const goals = document.getElementById('goals').value;
+
+            if (!budget || !category || !experience || !goals) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            await generateIdeas(budget, category, experience, goals);
+        });
+
+        async function generateIdeas(budget, category, experience, goals) {
+            resultsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Generating your business ideas...</span>
+                </div>
+            `;
+
+            const prompt = `Based on the following criteria, generate exactly 10 unique, practical, and innovative business ideas:
+
+Budget: ₹${budget}
+Industry/Category: ${category}
+Experience Level: ${experience}
+Goals/Interests: ${goals}
+
+For each idea, provide:
+1. A catchy business name
+2. A brief 2-3 sentence description
+3. Why it's suitable for the given budget and experience level
+
+Format the response as a numbered list (1-10) with clear separation between ideas.`;
+
+            const maxRetries = 3;
+            let retryCount = 0;
+            let lastError = null;
+
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt }]
+                            }]
+                        })
+                    });
+
+                    if (response.status === 429) {
+                        retryCount++;
+                        const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                        if (retryCount < maxRetries) {
+                            resultsContainer.innerHTML = `
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <span>Rate limit hit. Retrying in ${waitTime / 1000}s (Attempt ${retryCount}/${maxRetries})...</span>
+                                </div>
+                            `;
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                            continue;
+                        } else {
+                            lastError = 'API rate limit exceeded. Please wait a few minutes and try again.';
+                            break;
+                        }
+                    }
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        const errorMsg = errorData.error?.message || `HTTP ${response.status}`;
+                        throw new Error(`API Error: ${errorMsg}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                        const ideas = data.candidates[0].content.parts[0].text;
+                        displayIdeas(ideas);
+                        return;
+                    } else {
+                        throw new Error('No ideas generated. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    lastError = error.message;
+                    retryCount++;
+                    
+                    if (retryCount < maxRetries && error.message.includes('429')) {
+                        const waitTime = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                        resultsContainer.innerHTML = `
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <span>Retrying in ${waitTime / 1000}s (Attempt ${retryCount}/${maxRetries})...</span>
+                            </div>
+                        `;
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            if (lastError) {
+                if (lastError.includes('rate limit')) {
+                    showError(`⏱️ ${lastError}<br><br>The free tier of Gemini API has strict rate limits. <strong>Solutions:</strong><br>• Wait 1-2 minutes before trying again<br>• Use a different API key<br>• Upgrade to a paid Google Cloud plan for higher limits`);
+                } else if (lastError.includes('API key')) {
+                    showError(`🔑 Invalid API Key: ${lastError}<br>Please verify your Gemini API key is correct.`);
+                } else {
+                    showError(`❌ Error: ${lastError}`);
+                }
+            }
+        }
+
+        function displayIdeas(ideasText) {
+            // Split the text into individual ideas
+            const ideaSections = ideasText.split(/\n(?=\d+\.)/);
+            
+            let html = '<div class="ideas-list">';
+            
+            ideaSections.forEach((section, index) => {
+                if (section.trim()) {
+                    // Clean up the idea text
+                    const cleanedSection = section.trim();
+                    const lines = cleanedSection.split('\n').filter(line => line.trim());
+                    
+                    html += `
+                        <div class="idea-card">
+                            <div class="idea-number">${index + 1}</div>
+                            <div class="idea-content">
+                                ${lines.map((line, i) => {
+                                    // Make the first line (business name) bold
+                                    if (i === 0) {
+                                        return `<strong>${line.replace(/^\d+\.\s*/, '')}</strong>`;
+                                    }
+                                    return line;
+                                }).join('<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            resultsContainer.innerHTML = html;
+        }
+
+        function showError(message) {
+            resultsContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

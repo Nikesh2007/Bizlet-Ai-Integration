@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Flow</title>
+
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%}
+body{
+  background:#000;
+  overflow:hidden;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+
+#bgCanvas{position:fixed;inset:0;z-index:1}
+
+
+.overlay{
+  position:fixed;inset:0;
+  background:radial-gradient(circle,rgba(0,0,0,.5),rgba(0,0,0,.85));
+  z-index:5;
+}
+
+
+.popup{
+  position:fixed;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.6);
+  width:90%;max-width:520px;
+  padding:42px 38px;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(18,18,18,.92));
+  border-radius:22px;
+  border:1px solid rgba(255,215,0,.25);
+  backdrop-filter:blur(18px);
+  box-shadow:0 40px 120px rgba(0,0,0,.95);
+  z-index:10;
+  opacity:0;
+  transition:.7s cubic-bezier(.16,1,.3,1);
+}
+.popup.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.popup.exit{
+  transform:translate(-50%,120%) scale(.9);
+  opacity:0;
+  transition:.35s cubic-bezier(.7,0,.9,.3);
+}
+
+
+.badge{
+  display:inline-block;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:600;
+  color:#000;
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  margin-bottom:16px;
+}
+.popup h2{font-size:1.9rem;color:#FFD700;margin-bottom:8px}
+.popup p{color:#cfcfcf;font-size:.95rem;margin-bottom:18px}
+.reaction{
+  font-size:.9rem;
+  color:#FFD700;
+  margin-bottom:24px;
+  min-height:20px;
+  text-align:left;
+}
+
+
+.popup input[type=number]{
+  width:100%;
+  padding:16px;
+  font-size:1.2rem;
+  border-radius:14px;
+  border:1px solid rgba(255,215,0,.35);
+  background:rgba(0,0,0,.4);
+  color:#FFD700;
+  text-align:center;
+  outline:none;
+  margin-bottom:30px;
+  appearance:textfield;
+}
+.popup input::-webkit-inner-spin-button,
+.popup input::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+
+
+.warning-message{
+  font-size:0.85rem;
+  color:#FF6B6B;
+  padding:8px 12px;
+  background:rgba(255,107,107,.15);
+  border-left:3px solid #FF6B6B;
+  border-radius:4px;
+  text-align:left;
+  margin-bottom:20px;
+  display:none;
+}
+
+
+.warning-message.show{
+  display:block;
+}
+
+
+.actions button{
+  width:100%;
+  padding:16px;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;
+  font-size:1rem;
+  background:linear-gradient(135deg,#FFD700,#FFA500);
+  color:#000;
+}
+
+
+.actions button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+
+.categories{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-top:24px;
+}
+.cat{
+  padding:14px;
+  border-radius:12px;
+  text-align:center;
+  font-weight:600;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,215,0,.25);
+  color:#FFD700;
+  cursor:pointer;
+  transition:.2s;
+}
+.cat:hover{background:rgba(255,215,0,.15)}
+.cat.selected{background:rgba(255,215,0,.35);color:#000}
+
+
+.exp-value{
+  font-size:1.2rem;
+  color:#FFD700;
+  text-align:center;
+  margin-bottom:18px;
+}
+.exp-slider{width:100%;margin-bottom:30px}
+
+
+.ai-assistant{
+  position:fixed;
+  right:26px;
+  bottom:26px;
+  z-index:50;
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  pointer-events:none;
+  opacity:1;
+  transition:opacity 0.3s;
+}
+
+
+.ai-assistant.hidden{
+  opacity:0;
+  pointer-events:none;
+}
+
+
+.ai-robot{
+  font-size:42px;
+  animation:float 3s ease-in-out infinite;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+.ai-bubble{
+  background:rgba(18,18,18,.9);
+  border:1px solid rgba(255,215,0,.35);
+  border-radius:14px;
+  padding:12px 16px;
+  display:flex;
+  gap:8px;
+}
+.ai-bubble span{
+  width:7px;height:7px;border-radius:50%;
+  background:#FFD700;
+  animation:typing 1.4s infinite;
+}
+.ai-bubble span:nth-child(2){animation-delay:.2s}
+.ai-bubble span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,100%{opacity:.3}50%{opacity:1}}
+
+
+.analysis-screen{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  display:none;
+  background:#000;
+  overflow:hidden;
+}
+
+
+.analysis-screen.loading{
+  display:flex;
+}
+
+
+.analysis-container{
+  position:relative;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+
+#analysisCanvas{
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+
+
+.floating-particles{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+}
+
+
+.particle{
+  position:fixed;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:rgba(255,215,0,.8);
+  box-shadow:0 0 10px rgba(255,215,0,.9);
+  animation:particle-float 4s ease-in forwards;
+}
+
+
+@keyframes particle-float{
+  0%{opacity:1;transform:translateY(0) translateX(0)}
+  100%{opacity:0;transform:translateY(-150px) translateX(100px)}
+}
+
+
+.loading-content{
+  position:relative;
+  z-index:2;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+
+.animation-container{
+  font-size:60px;
+  margin-bottom:20px;
+  height:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+
+.icon-wrapper{
+  position:relative;
+  width:80px;
+  height:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+.testube{
+  position:absolute;
+  animation:boil 0.8s ease-in-out infinite;
+  opacity:1;
+}
+
+
+.robot-icon{
+  position:absolute;
+  animation:robotSpin 3s linear infinite;
+  opacity:0;
+}
+
+
+@keyframes boil{
+  0%{transform:scaleY(1) rotateZ(0deg)}
+  25%{transform:scaleY(1.05) rotateZ(-2deg)}
+  50%{transform:scaleY(1) rotateZ(0deg)}
+  75%{transform:scaleY(1.05) rotateZ(2deg)}
+  100%{transform:scaleY(1) rotateZ(0deg)}
+}
+
+
+@keyframes robotSpin{
+  0%{transform:rotateY(0deg) rotateX(0deg)}
+  100%{transform:rotateY(360deg) rotateX(10deg)}
+}
+
+
+.bubble{
+  position:absolute;
+  width:8px;
+  height:8px;
+  background:rgba(255,215,0,.8);
+  border-radius:50%;
+  box-shadow:0 0 10px rgba(255,215,0,.8);
+  animation:bubble-rise 1.5s ease-in forwards;
+}
+
+
+@keyframes bubble-rise{
+  0%{opacity:1;transform:translateY(0) translateX(0)}
+  100%{opacity:0;transform:translateY(-60px) translateX(20px)}
+}
+
+
+.analysis-title{
+  font-size:2rem;
+  color:#FFD700;
+  margin-bottom:10px;
+  font-weight:700;
+  text-shadow:0 0 20px rgba(255,215,0,.5);
+}
+
+
+.analysis-subtitle{
+  font-size:0.9rem;
+  color:#cfcfcf;
+  margin-bottom:20px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+
+.progress-bar{
+  width:300px;
+  height:8px;
+  background:rgba(255,215,0,.2);
+  border-radius:10px;
+  overflow:hidden;
+  margin:0 auto 20px;
+  border:1px solid rgba(255,215,0,.35);
+}
+
+
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,#FFD700,#FFA500);
+  width:0%;
+  animation:fillProgress 15s ease-in-out forwards;
+  box-shadow:0 0 15px rgba(255,215,0,.8);
+}
+
+
+@keyframes fillProgress{
+  0%{width:0%}
+  100%{width:100%}
+}
+
+
+.status-text{
+  color:#FFD700;
+  font-size:0.85rem;
+  margin-bottom:15px;
+  min-height:20px;
+  font-weight:600;
+  letter-spacing:1px;
+}
+
+
+.results-content{
+  position:relative;
+  z-index:2;
+  width:98%;
+  max-width:1200px;
+  height:95vh;
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+
+.results-header{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+
+.results-header h1{
+  font-size:2.2rem;
+  color:#FFD700;
+  margin-bottom:8px;
+  text-shadow:0 0 20px rgba(255,215,0,.5);
+}
+
+
+.results-header p{
+  color:#cfcfcf;
+  font-size:0.95rem;
+  margin-bottom:15px;
+}
+
+
+.table-wrapper{
+  flex:1;
+  overflow-y:auto;
+  border:1px solid rgba(255,215,0,.2);
+  border-radius:12px;
+  background:rgba(0,0,0,.3);
+  width:100%;
+  box-sizing:border-box;
+}
+
+
+.table-wrapper::-webkit-scrollbar{
+  width:8px;
+}
+
+
+.table-wrapper::-webkit-scrollbar-track{
+  background:rgba(255,215,0,.08);
+  border-radius:4px;
+}
+
+
+.table-wrapper::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#FFD700,#FFA500);
+  border-radius:4px;
+  box-shadow:0 0 10px rgba(255,215,0,.5);
+}
+
+
+.table-wrapper::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#FFA500,#FFD700);
+}
+
+
+.table-wrapper{
+  scrollbar-color:#FFD700 rgba(255,215,0,.08);
+  scrollbar-width:thin;
+}
+
+
+.results-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:0.9rem;
+  text-align:left;
+}
+
+
+.results-table thead{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(10px);
+}
+
+
+.results-table th{
+  padding:16px 12px;
+  color:#FFD700;
+  background:linear-gradient(90deg,rgba(255,215,0,.15),rgba(255,165,0,.1));
+  text-transform:uppercase;
+  font-size:0.75rem;
+  letter-spacing:1.5px;
+  font-weight:700;
+  border-bottom:2px solid rgba(255,215,0,.35);
+  white-space:nowrap;
+}
+
+
+.results-table td{
+  padding:14px 12px;
+  color:#cfcfcf;
+  border-bottom:1px solid rgba(255,215,0,.1);
+  word-wrap:break-word;
+  word-break:break-word;
+}
+
+
+.results-table tbody tr{
+  transition:background-color 0.2s ease;
+}
+
+
+.results-table tbody tr:hover{
+  background:rgba(255,215,0,.08);
+}
+
+
+.results-table tbody tr:nth-child(even){
+  background:rgba(255,215,0,.02);
+}
+
+
+.results-table .sno-col{
+  width:50px;
+  text-align:center;
+  color:#FFD700;
+  font-weight:700;
+}
+
+
+.results-table .title-col{
+  color:#FFD700;
+  font-weight:700;
+  min-width:220px;
+}
+
+
+.results-table .detail-col{
+  min-width:250px;
+  color:#cfcfcf;
+  line-height:1.4;
+  cursor:pointer;
+  transition:color 0.2s;
+}
+
+
+.results-table .detail-col:hover{
+  color:#FFD700;
+}
+
+
+.results-table tbody tr:nth-child(1), .results-table tbody tr:nth-child(4), .results-table tbody tr:nth-child(7), 
+.results-table tbody tr:nth-child(10), .results-table tbody tr:nth-child(13){
+  background:rgba(255,215,0,.04);
+}
+
+
+.detail-modal{
+  position:fixed;
+  inset:0;
+  z-index:30;
+  display:none;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(5px);
+}
+
+
+.detail-modal.show{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+.detail-modal-content{
+  position:relative;
+  width:90%;
+  max-width:600px;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(18,18,18,.92));
+  border-radius:18px;
+  border:1px solid rgba(255,215,0,.25);
+  padding:40px;
+  box-shadow:0 40px 120px rgba(0,0,0,.95);
+  max-height:80vh;
+  overflow-y:auto;
+}
+
+
+.detail-modal-content::-webkit-scrollbar{
+  width:6px;
+}
+
+
+.detail-modal-content::-webkit-scrollbar-track{
+  background:rgba(255,215,0,.08);
+  border-radius:4px;
+}
+
+
+.detail-modal-content::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#FFD700,#FFA500);
+  border-radius:4px;
+}
+
+
+.modal-close{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:32px;
+  height:32px;
+  background:rgba(255,215,0,.2);
+  border:none;
+  border-radius:50%;
+  color:#FFD700;
+  font-size:1.5rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+}
+
+
+.modal-close:hover{
+  background:rgba(255,215,0,.35);
+}
+
+
+.modal-title{
+  font-size:1.8rem;
+  color:#FFD700;
+  margin-bottom:16px;
+  margin-top:0;
+  text-shadow:0 0 20px rgba(255,215,0,.5);
+}
+
+
+.modal-detail-item{
+  margin-bottom:20px;
+}
+
+
+.modal-detail-label{
+  font-size:0.75rem;
+  color:#cfcfcf;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+
+.modal-detail-value{
+  font-size:0.95rem;
+  color:#FFD700;
+  line-height:1.6;
+  word-wrap:break-word;
+  word-break:break-word;
+}
+</style>
+</head>
+
+
+<body>
+
+
+<canvas id="bgCanvas"></canvas>
+<div class="overlay"></div>
+
+
+<div class="popup" id="categoryPopup">
+  <div class="badge">STEP 1</div>
+  <h2>Select Categories</h2>
+  <p>You can select multiple</p>
+  <div class="categories" id="categorySelection">
+    <div class="cat">Open</div><div class="cat">Agriculture</div>
+    <div class="cat">Fintech</div><div class="cat">Healthcare</div>
+    <div class="cat">Education</div><div class="cat">E-commerce</div>
+    <div class="cat">Manufacturing</div><div class="cat">Real Estate</div>
+    <div class="cat">Logistics</div><div class="cat">SaaS / AI</div>
+    <div class="cat">Technical</div><div class="cat">Others</div>
+  </div>
+  <div class="actions" style="margin-top:26px">
+    <button id="catContinue">Continue</button>
+  </div>
+</div>
+
+
+<div class="popup" id="experiencePopup" style="top:-60%">
+  <div class="badge">STEP 2</div>
+  <h2>Years of Experience</h2>
+  <p>Select using the slider</p>
+  <div class="exp-value" id="expValue">0 Years</div>
+  <input type="range" min="0" max="50" value="0" class="exp-slider" id="expSlider">
+  <div class="actions"><button id="expContinue">Continue</button></div>
+</div>
+
+
+<div class="popup" id="modePopup" style="top:-60%">
+  <div class="badge">STEP 3</div>
+  <h2>Mode of Business</h2>
+  <p>Select how your business operates</p>
+  <div class="categories" id="modeSelection">
+    <div class="cat mode">Hybrid</div>
+    <div class="cat mode">Online</div>
+    <div class="cat mode">Offline</div>
+  </div>
+  <div class="actions" style="margin-top:26px">
+    <button id="modeContinue" disabled>Continue</button>
+  </div>
+</div>
+
+
+<div class="popup" id="goalPopup" style="top:-60%">
+  <div class="badge">STEP 4</div>
+  <h2>Your Goals</h2>
+  <p>You can select multiple</p>
+  <div class="categories" id="goalSelection">
+    <div class="cat goal">🚀 Grow revenue</div>
+    <div class="cat goal">🤖 Automate operations</div>
+    <div class="cat goal">📣 Improve marketing</div>
+    <div class="cat goal">📊 Get insights / analytics</div>
+    <div class="cat goal">🧪 Just exploring</div>
+  </div>
+  <div class="actions" style="margin-top:26px">
+    <button id="goalContinue" disabled>Finish</button>
+  </div>
+</div>
+
+
+<div class="analysis-screen" id="analysisScreen">
+  <div class="analysis-container">
+    <canvas id="analysisCanvas"></canvas>
+    <div class="floating-particles" id="floatingParticles"></div>
+    
+    <div class="loading-content" id="loadingContent">
+      <div class="animation-container">
+        <div class="icon-wrapper">
+          <div class="testube">🧪</div>
+          <div class="robot-icon">🤖</div>
+        </div>
+      </div>
+      <div class="analysis-title">AI Analysis</div>
+      <div class="analysis-subtitle">Creating your personalized plan</div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div class="status-text" id="statusText">Initializing...</div>
+    </div>
+
+
+    <div class="results-content" id="resultsContent">
+      <div class="results-header">
+        <h1>Problem Statements</h1>
+        <p id="resultsSubtitle">Top 15 Problems People Face With your Customization</p>
+      </div>
+      
+      <div class="table-wrapper">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th class="sno-col">S.No</th>
+              <th>Problem Statement</th>
+              <th class="detail-col">View Details</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <div class="detail-modal" id="detailModal">
+      <div class="detail-modal-content">
+        <button class="modal-close" id="modalCloseBtn">&times;</button>
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">S. No</div>
+          <div class="modal-detail-value" id="modalSNo"></div>
+        </div>
+        <div class="modal-detail-item">
+          <div class="modal-detail-label">Complete Details</div>
+          <div class="modal-detail-value" id="modalDetail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="ai-assistant" id="aiAssistant">
+  <div class="ai-bubble"><span></span><span></span><span></span></div>
+  <div class="ai-robot">🤖</div>
+</div>
+
+
+<script>
+const c=document.getElementById("bgCanvas"),ctx=c.getContext("2d");
+let w,h;function rs(){w=c.width=innerWidth;h=c.height=innerHeight}
+rs();addEventListener("resize",rs);
+const pts=[...Array(120)].map(()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3}));
+(function bg(){
+  ctx.fillStyle="rgba(0,0,0,.25)";
+  ctx.fillRect(0,0,w,h);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>w)p.vx*=-1;
+    if(p.y<0||p.y>h)p.vy*=-1;
+    ctx.fillStyle="rgba(255,215,0,.8)";
+    ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill();
+  });
+  requestAnimationFrame(bg);
+})();
+
+
+window.onload=()=>setTimeout(()=>categoryPopup.classList.add("show"),80);
+
+
+const cats=document.querySelectorAll(".cat:not(.mode):not(.goal)");
+cats.forEach(cat=>{
+  cat.addEventListener("click",()=>{
+    if(cat.textContent.trim().toLowerCase()==="open"){
+      const allSelected=[...cats].every(c=>c.classList.contains("selected"));
+      cats.forEach(c=>allSelected?c.classList.remove("selected"):c.classList.add("selected"));
+    }else{
+      cat.classList.toggle("selected");
+    }
+  });
+});
+
+
+const catContinue = document.getElementById("catContinue");
+catContinue.onclick=()=>{
+  if(!document.querySelector(".cat:not(.mode):not(.goal).selected")) return;
+  document.getElementById("categoryPopup").classList.add("exit");
+  setTimeout(()=>{
+    document.getElementById("categoryPopup").style.display="none";
+    document.getElementById("experiencePopup").style.top="50%";
+    document.getElementById("experiencePopup").classList.add("show");
+  },350);
+};
+
+
+const expSlider = document.getElementById("expSlider");
+const expValue = document.getElementById("expValue");
+const expContinue = document.getElementById("expContinue");
+
+
+expSlider.oninput=()=>expValue.textContent=`${expSlider.value} Year${expSlider.value!=="1"?"s":""}`;
+expContinue.onclick=()=>{
+  document.getElementById("experiencePopup").classList.add("exit");
+  setTimeout(()=>{
+    document.getElementById("experiencePopup").style.display="none";
+    document.getElementById("modePopup").style.top="50%";
+    document.getElementById("modePopup").classList.add("show");
+  },350);
+};
+
+
+const modeButtons = document.querySelectorAll(".mode");
+const modeContinueBtn = document.getElementById("modeContinue");
+
+
+modeButtons.forEach(m=>{
+  m.onclick=()=>{
+    modeButtons.forEach(x=>x.classList.remove("selected"));
+    m.classList.add("selected");
+    modeContinueBtn.disabled = false;
+  };
+});
+
+
+modeContinueBtn.onclick=()=>{
+  if(!document.querySelector(".mode.selected")) return;
+  document.getElementById("modePopup").classList.add("exit");
+  setTimeout(()=>{
+    document.getElementById("modePopup").style.display="none";
+    document.getElementById("goalPopup").style.top="50%";
+    document.getElementById("goalPopup").classList.add("show");
+  },350);
+};
+
+
+document.getElementById("modePopup").addEventListener("keydown",(e)=>{
+  if(e.key === "Enter"){
+    if(document.querySelector(".mode.selected")){
+      modeContinueBtn.click();
+    }
+  }
+});
+
+
+const goalButtons = document.querySelectorAll(".goal");
+const goalContinueBtn = document.getElementById("goalContinue");
+
+
+goalButtons.forEach(g=>{
+  g.onclick=()=>{
+    g.classList.toggle("selected");
+    const anySelected = document.querySelector(".goal.selected");
+    goalContinueBtn.disabled = !anySelected;
+  };
+});
+
+
+goalContinueBtn.onclick=()=>{
+  if(!document.querySelector(".goal.selected")) return;
+  startAnalysis();
+};
+
+
+document.getElementById("goalPopup").addEventListener("keydown",(e)=>{
+  if(e.key === "Enter"){
+    if(document.querySelector(".goal.selected")){
+      goalContinueBtn.click();
+    }
+  }
+});
+
+
+document.getElementById("modalCloseBtn").addEventListener("click", closeDetailModal);
+document.getElementById("detailModal").addEventListener("click", (e) => {
+  if(e.target.id === "detailModal") closeDetailModal();
+});
+
+
+const API_ENDPOINT = "http://localhost:3000/generate";
+
+
+let allUserData = {};
+
+
+function collectUserData() {
+    const selectedCategories = Array.from(document.querySelectorAll("#categorySelection .cat.selected"))
+        .map(c => c.textContent.trim());
+
+
+    const selectedGoals = Array.from(document.querySelectorAll("#goalSelection .cat.selected"))
+        .map(g => g.textContent.trim().replace(/[\uD800-\uDBFF\uDC00-\uDFFF]/g, '').trim());
+
+
+    allUserData = {
+        category: selectedCategories.join(", "),
+        experience: document.getElementById("expSlider").value,
+        mode: document.querySelector("#modeSelection .mode.selected").textContent.trim(),
+        goals: selectedGoals.join(", ")
+    };
+    return allUserData;
+}
+
+
+async function fetchAnalysis(data) {
+    try {
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+
+        const result = await response.json();
+        return result;
+
+
+    } catch (error) {
+        console.error("API Call Failed:", error);
+        document.getElementById("statusText").textContent = "API Error: Failed to fetch ideas.";
+        document.querySelector(".progress-fill").style.animationPlayState = 'paused';
+        return null;
+    }
+}
+
+
+async function startAnalysis(){
+  const userData = collectUserData();
+  document.getElementById("goalPopup").classList.add("exit");
+  setTimeout(async ()=>{
+    document.getElementById("goalPopup").style.display="none";
+    const analysisScreen = document.getElementById("analysisScreen");
+    const aiAssistant = document.getElementById("aiAssistant");
+    aiAssistant.classList.add("hidden");
+    analysisScreen.classList.add("loading");
+    
+    runAnalysisAnimation();
+
+
+    const results = await fetchAnalysis(userData);
+
+
+    if (results) {
+        displayResultsTable(results);
+        
+        document.getElementById("loadingContent").style.display = "none";
+        document.getElementById("resultsContent").style.display = "flex";
+    }
+
+
+  },350);
+}
+
+
+function displayResultsTable(results) {
+    const resultsBody = document.getElementById("resultsBody");
+    resultsBody.innerHTML = '';
+    
+    const ideas = Array.isArray(results) ? results : [];
+
+
+    ideas.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="sno-col">${item.s_no}</td>
+            <td class="title-col">${sanitizeText(item.business_title)}</td>
+            <td class="detail-col">
+              <button class="detail-btn" data-index="${item.s_no}">Click to View</button>
+            </td>
+        `;
+        resultsBody.appendChild(row);
+    });
+
+
+    document.getElementById("resultsSubtitle").textContent = `Your Top ${ideas.length} Personalized Business Ideas`;
+    
+    attachDetailButtonListeners(ideas);
+}
+
+
+function attachDetailButtonListeners(ideas) {
+    document.querySelectorAll(".detail-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            const index = parseInt(e.target.dataset.index) - 1;
+            const item = ideas[index];
+            if(item) showDetailModal(item);
+        });
+    });
+}
+
+
+async function showDetailModal(item) {
+    document.getElementById("modalTitle").textContent = sanitizeText(item.business_title);
+    document.getElementById("modalSNo").textContent = item.s_no;
+    
+    const detailValue = document.getElementById("modalDetail");
+    detailValue.textContent = "Generating detailed analysis...";
+    detailValue.style.color = "#FFA500";
+    
+    document.getElementById("detailModal").classList.add("show");
+    
+    try {
+        const detailedContent = await generateDetailedAnalysis(item.business_title);
+        detailValue.textContent = detailedContent;
+        detailValue.style.color = "#FFD700";
+    } catch (error) {
+        detailValue.textContent = "Error generating analysis: " + error.message;
+        detailValue.style.color = "#FF6B6B";
+    }
+}
+
+
+async function generateDetailedAnalysis(businessTitle) {
+    try {
+        const response = await fetch("http://localhost:3000/generate-detail", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                business_title: businessTitle,
+                user_data: allUserData
+            })
+        });
+
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+
+        const result = await response.json();
+        return result.detailed_analysis || "No detailed analysis available.";
+
+
+    } catch (error) {
+        console.error("Detail API Call Failed:", error);
+        throw error;
+    }
+}
+
+
+function closeDetailModal() {
+    document.getElementById("detailModal").classList.remove("show");
+}
+
+
+function sanitizeText(text) {
+    return text.replace(/[\uD800-\uDBFF\uDC00-\uDFFF]/g, '').trim();
+}
+
+
+function runAnalysisAnimation(){
+  createFloatingParticles();
+  createBoilingBubbles();
+  animateIcons();
+  typeStatusMessages();
+}
+
+
+function createFloatingParticles(){
+  const container = document.getElementById("floatingParticles");
+  const interval = setInterval(()=>{
+    const particle = document.createElement("div");
+    particle.className = "particle";
+    particle.style.left = Math.random()*100 + "%";
+    particle.style.top = (20 + Math.random()*60) + "%";
+    particle.style.animationDuration = (3 + Math.random()*2) + "s";
+    particle.style.animationDelay = Math.random()*1 + "s";
+    container.appendChild(particle);
+    setTimeout(()=>particle.remove(), 5000);
+  }, 200);
+}
+
+
+function createBoilingBubbles(){
+  const container = document.querySelector(".animation-container");
+  const interval = setInterval(()=>{
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.style.left = (40 + Math.random()*20) + "%";
+    bubble.style.animationDuration = (1 + Math.random()*1) + "s";
+    container.appendChild(bubble);
+    setTimeout(()=>bubble.remove(), 2000);
+  }, 200);
+}
+
+
+function animateIcons(){
+  const testube = document.querySelector(".testube");
+  const robotIcon = document.querySelector(".robot-icon");
+  
+  setInterval(()=>{
+    testube.style.opacity = "1";
+    robotIcon.style.opacity = "0";
+    setTimeout(()=>{
+      testube.style.opacity = "0";
+      robotIcon.style.opacity = "1";
+    }, 5000);
+    setTimeout(()=>{
+      robotIcon.style.opacity = "0";
+    }, 10000);
+  }, 10000);
+  
+  setTimeout(()=>{
+    testube.style.opacity = "0";
+    robotIcon.style.opacity = "1";
+  }, 5000);
+  setTimeout(()=>{
+    robotIcon.style.opacity = "0";
+  }, 10000);
+}
+
+
+function typeStatusMessages(){
+  const messages = [
+    "Analyzing business model...",
+    "Processing insights...",
+    "Generating plans...",
+    "Creating roadmap...",
+    "Finalizing recommendations..."
+  ];
+  
+  let msgIndex = 0;
+  const statusText = document.getElementById("statusText");
+  
+  function showNextMessage(){
+    if(msgIndex < messages.length){
+      statusText.textContent = messages[msgIndex];
+      msgIndex++;
+      setTimeout(showNextMessage, 3000);
+    }
+  }
+  showNextMessage();
+}
+
+
+window.addEventListener("resize",()=>{
+  const canvas = document.getElementById("analysisCanvas");
+  if(canvas) canvas.width = window.innerWidth;
+  if(canvas) canvas.height = window.innerHeight;
+});
+</script>
+
+
+</body>
+</html>
